@@ -4,6 +4,7 @@ const categoriesRoutes = require('./routes/categories');
 const productsRoutes = require('./routes/products');
 const ordersRoutes = require('./routes/orders');
 const shiftsRoutes = require('./routes/shifts');
+const reportsRoutes = require('./routes/reports');
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use('/categories', categoriesRoutes);
 app.use('/products', productsRoutes);
 app.use('/orders', ordersRoutes);
 app.use('/shifts', shiftsRoutes);
+app.use('/reports', reportsRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);

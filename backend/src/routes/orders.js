@@ -1,8 +1,31 @@
 const express = require('express');
 const { Prisma } = require('@prisma/client');
 const prisma = require('../lib/prisma');
+const checkbox = require('../services/checkbox');
 
 const router = express.Router();
+
+async function fiscalizeOrder(order, receiptItems) {
+  const token = await checkbox.authenticate();
+
+  let shift = await checkbox.openShift(token);
+  for (let i = 0; i < 10 && shift.status !== 'OPENED'; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    shift = await checkbox.getShiftStatus(token, shift.id);
+  }
+  if (shift.status !== 'OPENED') {
+    throw new Error(`Checkbox shift did not open in time (status: ${shift.status})`);
+  }
+
+  const receipt = await checkbox.createReceipt(
+    token,
+    receiptItems,
+    order.payment_method,
+    Number(order.total_amount)
+  );
+
+  return receipt.id;
+}
 
 class OrderValidationError extends Error {}
 
@@ -26,6 +49,8 @@ router.post('/', async (req, res, next) => {
           .json({ error: 'each item requires product_id and a positive integer quantity' });
       }
     }
+
+    const receiptItems = [];
 
     const order = await prisma.$transaction(async (tx) => {
       const zero = new Prisma.Decimal(0);
@@ -62,6 +87,13 @@ router.post('/', async (req, res, next) => {
           modifier_id: item.modifier_id ?? null,
           quantity: item.quantity,
           price_at_sale: unitPrice,
+        });
+
+        receiptItems.push({
+          code: product.id,
+          name: product.name,
+          price: Number(unitPrice),
+          quantity: item.quantity,
         });
 
         for (const recipeLine of product.recipe) {
@@ -101,7 +133,23 @@ router.post('/', async (req, res, next) => {
       return createdOrder;
     });
 
-    res.status(201).json(order);
+    let fiscalStatus = 'success';
+    let fiscalReceiptId = null;
+
+    try {
+      fiscalReceiptId = await fiscalizeOrder(order, receiptItems);
+    } catch (fiscalErr) {
+      console.error('Fiscalization failed for order', order.id, ':', fiscalErr.message);
+      fiscalStatus = 'failed';
+    }
+
+    const updatedOrder = await prisma.orders.update({
+      where: { id: order.id },
+      data: { fiscal_status: fiscalStatus, fiscal_receipt_id: fiscalReceiptId },
+      include: { order_items: true },
+    });
+
+    res.status(201).json(updatedOrder);
   } catch (err) {
     if (err instanceof OrderValidationError) {
       return res.status(400).json({ error: err.message });

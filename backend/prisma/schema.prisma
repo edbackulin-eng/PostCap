@@ -26,6 +26,12 @@ enum StockMovementReason {
   adjustment
 }
 
+enum FiscalStatus {
+  pending
+  success
+  failed
+}
+
 model users {
   id         Int      @id @default(autoincrement())
   name       String
@@ -110,6 +116,7 @@ model orders {
   total_amount      Decimal       @db.Decimal(10, 2)
   payment_method    PaymentMethod
   fiscal_receipt_id String?
+  fiscal_status     FiscalStatus  @default(pending)
   created_at        DateTime      @default(now())
 
   shift           shifts            @relation(fields: [shift_id], references: [id])

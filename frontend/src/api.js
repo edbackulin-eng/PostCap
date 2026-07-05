@@ -23,3 +23,18 @@ export async function login(pinCode) {
 
   return data;
 }
+
+export async function getProducts() {
+  let response;
+  try {
+    response = await fetch(`${API_URL}/products`);
+  } catch {
+    throw new Error("Немає з'єднання з сервером");
+  }
+
+  if (!response.ok) {
+    throw new Error('Не вдалося завантажити товари');
+  }
+
+  return response.json();
+}

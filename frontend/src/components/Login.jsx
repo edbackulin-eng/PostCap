@@ -5,7 +5,7 @@ import './Login.css';
 const MAX_PIN_LENGTH = 10;
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'];
 
-function Login() {
+function Login({ onLoginSuccess }) {
   const [pin, setPin] = useState('');
   const [message, setMessage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +32,7 @@ function Login() {
 
     try {
       const user = await login(pin);
-      setMessage({ type: 'success', text: `Вхід виконано, вітаю ${user.name}!` });
+      onLoginSuccess(user);
     } catch (err) {
       setMessage({ type: 'error', text: err.message });
     } finally {

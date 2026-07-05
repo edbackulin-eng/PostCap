@@ -38,3 +38,48 @@ export async function getProducts() {
 
   return response.json();
 }
+
+export async function openShift(cashierId) {
+  let response;
+  try {
+    response = await fetch(`${API_URL}/shifts/open`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cashier_id: cashierId, opening_cash: 0 }),
+    });
+  } catch {
+    throw new Error("Немає з'єднання з сервером");
+  }
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    if (data.shift_id) {
+      return { id: data.shift_id };
+    }
+    throw new Error(data.error || 'Не вдалося відкрити зміну');
+  }
+
+  return data;
+}
+
+export async function createOrder(order) {
+  let response;
+  try {
+    response = await fetch(`${API_URL}/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(order),
+    });
+  } catch {
+    throw new Error("Немає з'єднання з сервером");
+  }
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || 'Не вдалося створити замовлення');
+  }
+
+  return data;
+}

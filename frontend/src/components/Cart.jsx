@@ -1,5 +1,6 @@
-function Cart({ cart, onIncrement, onDecrement, onRemove }) {
+function Cart({ cart, onIncrement, onDecrement, onRemove, onPay, isPaying, paymentError }) {
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const paymentDisabled = cart.length === 0 || isPaying;
 
   return (
     <div className="cart">
@@ -38,12 +39,24 @@ function Cart({ cart, onIncrement, onDecrement, onRemove }) {
         <span>{total.toFixed(2)} ₴</span>
       </div>
 
+      {paymentError && <div className="cart-payment-error">{paymentError}</div>}
+
       <div className="cart-payment">
-        <button type="button" className="payment-btn payment-btn--cash" disabled={cart.length === 0}>
-          Готівка
+        <button
+          type="button"
+          className="payment-btn payment-btn--cash"
+          disabled={paymentDisabled}
+          onClick={() => onPay('cash')}
+        >
+          {isPaying ? 'Обробка...' : 'Готівка'}
         </button>
-        <button type="button" className="payment-btn payment-btn--card" disabled={cart.length === 0}>
-          Картка
+        <button
+          type="button"
+          className="payment-btn payment-btn--card"
+          disabled={paymentDisabled}
+          onClick={() => onPay('card')}
+        >
+          {isPaying ? 'Обробка...' : 'Картка'}
         </button>
       </div>
     </div>

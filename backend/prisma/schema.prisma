@@ -1,0 +1,144 @@
+// PostCup — Prisma schema
+// Побудовано на основі 01-docs/tz.md, розділ 5 "Структура бази даних"
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  cashier
+}
+
+enum PaymentMethod {
+  cash
+  card
+}
+
+enum StockMovementReason {
+  sale
+  manual_restock
+  adjustment
+}
+
+model users {
+  id         Int      @id @default(autoincrement())
+  name       String
+  pin_code   String   @unique
+  role       Role
+  created_at DateTime @default(now())
+
+  shifts shifts[]
+  orders orders[]
+}
+
+model categories {
+  id                 Int          @id @default(autoincrement())
+  name               String
+  parent_category_id Int?
+
+  parent_category categories?  @relation("CategoryToSubcategories", fields: [parent_category_id], references: [id])
+  subcategories    categories[] @relation("CategoryToSubcategories")
+  products         products[]
+}
+
+model products {
+  id          Int     @id @default(autoincrement())
+  name        String
+  category_id Int
+  price       Decimal @db.Decimal(10, 2)
+  is_active   Boolean @default(true)
+
+  category    categories          @relation(fields: [category_id], references: [id])
+  modifiers   product_modifiers[]
+  recipe      product_recipe[]
+  order_items order_items[]
+}
+
+model product_modifiers {
+  id          Int     @id @default(autoincrement())
+  product_id  Int
+  name        String
+  price_delta Decimal @db.Decimal(10, 2)
+
+  product     products      @relation(fields: [product_id], references: [id])
+  order_items order_items[]
+}
+
+model ingredients {
+  id            Int     @id @default(autoincrement())
+  name          String
+  unit          String
+  current_stock Decimal @db.Decimal(10, 3)
+
+  recipe          product_recipe[]
+  stock_movements stock_movements[]
+}
+
+model product_recipe {
+  id                Int     @id @default(autoincrement())
+  product_id        Int
+  ingredient_id     Int
+  quantity_per_unit Decimal @db.Decimal(10, 3)
+
+  product    products    @relation(fields: [product_id], references: [id])
+  ingredient ingredients @relation(fields: [ingredient_id], references: [id])
+}
+
+model shifts {
+  id           Int       @id @default(autoincrement())
+  cashier_id   Int
+  opened_at    DateTime  @default(now())
+  closed_at    DateTime?
+  opening_cash Decimal   @db.Decimal(10, 2)
+  closing_cash Decimal?  @db.Decimal(10, 2)
+  total_sales  Decimal?  @db.Decimal(10, 2)
+
+  cashier users    @relation(fields: [cashier_id], references: [id])
+  orders  orders[]
+}
+
+model orders {
+  id                Int           @id @default(autoincrement())
+  shift_id          Int
+  cashier_id        Int
+  total_amount      Decimal       @db.Decimal(10, 2)
+  payment_method    PaymentMethod
+  fiscal_receipt_id String?
+  created_at        DateTime      @default(now())
+
+  shift           shifts            @relation(fields: [shift_id], references: [id])
+  cashier         users             @relation(fields: [cashier_id], references: [id])
+  order_items     order_items[]
+  stock_movements stock_movements[]
+}
+
+model order_items {
+  id            Int     @id @default(autoincrement())
+  order_id      Int
+  product_id    Int
+  modifier_id   Int?
+  quantity      Int
+  price_at_sale Decimal @db.Decimal(10, 2)
+
+  order    orders             @relation(fields: [order_id], references: [id])
+  product  products           @relation(fields: [product_id], references: [id])
+  modifier product_modifiers? @relation(fields: [modifier_id], references: [id])
+}
+
+model stock_movements {
+  id            Int                 @id @default(autoincrement())
+  ingredient_id Int
+  change_amount Decimal             @db.Decimal(10, 3)
+  reason        StockMovementReason
+  order_id      Int?
+  created_at    DateTime            @default(now())
+
+  ingredient ingredients @relation(fields: [ingredient_id], references: [id])
+  order      orders?     @relation(fields: [order_id], references: [id])
+}

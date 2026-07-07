@@ -134,3 +134,11 @@ export function restockIngredient(id, amount) {
     body: JSON.stringify({ amount }),
   });
 }
+
+export function getDailyReport(date) {
+  return jsonRequest(`/reports/daily?date=${date}`);
+}
+
+export function getShiftsReport(date) {
+  return jsonRequest(`/reports/shifts?date=${date}`);
+}

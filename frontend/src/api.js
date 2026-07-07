@@ -127,3 +127,10 @@ export function updateProduct(id, product) {
 export function deleteProduct(id) {
   return jsonRequest(`/products/${id}`, { method: 'DELETE' });
 }
+
+export function restockIngredient(id, amount) {
+  return jsonRequest(`/ingredients/${id}/restock`, {
+    method: 'POST',
+    body: JSON.stringify({ amount }),
+  });
+}

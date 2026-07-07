@@ -149,6 +149,12 @@
   padding: 40px;
 }
 
+.low-stock-warning {
+  color: var(--error);
+  font-weight: 600;
+  font-size: 14px;
+}
+
 .status-badge {
   display: inline-block;
   padding: 4px 12px;

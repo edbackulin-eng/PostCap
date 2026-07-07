@@ -3,6 +3,7 @@ import MenuSection from './MenuSection';
 import StockSection from './StockSection';
 import ReportsSection from './ReportsSection';
 import StaffSection from './StaffSection';
+import SubscriptionSection from './SubscriptionSection';
 import './AdminPanel.css';
 
 const SECTIONS = ['Меню', 'Склад', 'Звіти', 'Працівники', 'Підписка'];
@@ -36,12 +37,7 @@ function AdminPanel({ user }) {
         {activeSection === 'Склад' && <StockSection />}
         {activeSection === 'Звіти' && <ReportsSection />}
         {activeSection === 'Працівники' && <StaffSection />}
-        {activeSection !== 'Меню' &&
-          activeSection !== 'Склад' &&
-          activeSection !== 'Звіти' &&
-          activeSection !== 'Працівники' && (
-            <div className="admin-placeholder">Розділ «{activeSection}» ще в розробці</div>
-          )}
+        {activeSection === 'Підписка' && <SubscriptionSection user={user} />}
       </main>
     </div>
   );

@@ -161,3 +161,10 @@ export function deleteCashier(id) {
 export function deactivateCashier(id) {
   return jsonRequest(`/users/${id}/deactivate`, { method: 'POST' });
 }
+
+export function createSubscriptionInvoice(ownerId, plan) {
+  return jsonRequest('/subscriptions/create-invoice', {
+    method: 'POST',
+    body: JSON.stringify({ owner_id: ownerId, plan }),
+  });
+}

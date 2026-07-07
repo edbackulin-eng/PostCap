@@ -83,3 +83,47 @@ export async function createOrder(order) {
 
   return data;
 }
+
+async function jsonRequest(path, options) {
+  let response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      headers: { 'Content-Type': 'application/json' },
+      ...options,
+    });
+  } catch {
+    throw new Error("Немає з'єднання з сервером");
+  }
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || 'Помилка запиту');
+  }
+
+  return data;
+}
+
+export function getCategories() {
+  return jsonRequest('/categories');
+}
+
+export function getIngredients() {
+  return jsonRequest('/ingredients');
+}
+
+export function createProduct(product) {
+  return jsonRequest('/products', { method: 'POST', body: JSON.stringify(product) });
+}
+
+export function updateProduct(id, product) {
+  return jsonRequest(`/products/${id}`, { method: 'PUT', body: JSON.stringify(product) });
+}
+
+export function deleteProduct(id) {
+  return jsonRequest(`/products/${id}`, { method: 'DELETE' });
+}

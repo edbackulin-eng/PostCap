@@ -16,6 +16,9 @@ router.post('/login', async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ error: 'Invalid PIN code' });
     }
+    if (!user.is_active) {
+      return res.status(401).json({ error: 'This cashier account has been deactivated' });
+    }
 
     res.json({ id: user.id, name: user.name, role: user.role });
   } catch (err) {

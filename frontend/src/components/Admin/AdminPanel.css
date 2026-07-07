@@ -82,6 +82,28 @@
   font-size: 15px;
 }
 
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.tab--active {
+  background: var(--accent);
+  color: #fff;
+}
+
 .report-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -181,6 +203,13 @@
 .menu-table-actions {
   display: flex;
   gap: 8px;
+}
+
+.pin-cell {
+  display: inline-block;
+  min-width: 60px;
+  font-family: var(--mono, monospace);
+  margin-right: 10px;
 }
 
 .menu-empty {

@@ -19,6 +19,10 @@ function validateRecipe(recipe) {
   return null;
 }
 
+function isForeignKeyRestriction(err) {
+  return err.code === 'P2003' || /foreign key constraint/i.test(err?.message || '');
+}
+
 router.get('/', async (req, res, next) => {
   try {
     const products = await prisma.products.findMany({ include: PRODUCT_INCLUDE });
@@ -147,7 +151,7 @@ router.delete('/:id', async (req, res, next) => {
         prisma.products.delete({ where: { id: productId } }),
       ]);
     } catch (deleteErr) {
-      if (deleteErr.code === 'P2003') {
+      if (isForeignKeyRestriction(deleteErr)) {
         return res.status(409).json({
           error: 'Cannot delete product referenced by existing orders. Deactivate it instead.',
         });

@@ -8,6 +8,7 @@ const shiftsRoutes = require('./routes/shifts');
 const reportsRoutes = require('./routes/reports');
 const subscriptionsRoutes = require('./routes/subscriptions');
 const ingredientsRoutes = require('./routes/ingredients');
+const usersRoutes = require('./routes/users');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use('/shifts', shiftsRoutes);
 app.use('/reports', reportsRoutes);
 app.use('/subscriptions', subscriptionsRoutes);
 app.use('/ingredients', ingredientsRoutes);
+app.use('/users', usersRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);

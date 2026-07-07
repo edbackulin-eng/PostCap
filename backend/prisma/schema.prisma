@@ -37,6 +37,7 @@ model users {
   name       String
   pin_code   String   @unique
   role       Role
+  is_active  Boolean  @default(true)
   created_at DateTime @default(now())
 
   shifts shifts[]

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import MenuSection from './MenuSection';
 import StockSection from './StockSection';
 import ReportsSection from './ReportsSection';
+import StaffSection from './StaffSection';
 import './AdminPanel.css';
 
 const SECTIONS = ['Меню', 'Склад', 'Звіти', 'Працівники', 'Підписка'];
@@ -34,9 +35,13 @@ function AdminPanel({ user }) {
         {activeSection === 'Меню' && <MenuSection />}
         {activeSection === 'Склад' && <StockSection />}
         {activeSection === 'Звіти' && <ReportsSection />}
-        {activeSection !== 'Меню' && activeSection !== 'Склад' && activeSection !== 'Звіти' && (
-          <div className="admin-placeholder">Розділ «{activeSection}» ще в розробці</div>
-        )}
+        {activeSection === 'Працівники' && <StaffSection />}
+        {activeSection !== 'Меню' &&
+          activeSection !== 'Склад' &&
+          activeSection !== 'Звіти' &&
+          activeSection !== 'Працівники' && (
+            <div className="admin-placeholder">Розділ «{activeSection}» ще в розробці</div>
+          )}
       </main>
     </div>
   );

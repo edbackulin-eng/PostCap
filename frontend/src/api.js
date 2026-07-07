@@ -16,6 +16,9 @@ export async function login(pinCode) {
 
   if (!response.ok) {
     if (response.status === 401) {
+      if (data.error && data.error.includes('deactivated')) {
+        throw new Error('Цього касира деактивовано. Зверніться до власника.');
+      }
       throw new Error('Невірний PIN-код');
     }
     throw new Error('Помилка входу. Спробуйте ще раз.');
@@ -141,4 +144,20 @@ export function getDailyReport(date) {
 
 export function getShiftsReport(date) {
   return jsonRequest(`/reports/shifts?date=${date}`);
+}
+
+export function getCashiers() {
+  return jsonRequest('/users');
+}
+
+export function createCashier(cashier) {
+  return jsonRequest('/users', { method: 'POST', body: JSON.stringify(cashier) });
+}
+
+export function deleteCashier(id) {
+  return jsonRequest(`/users/${id}`, { method: 'DELETE' });
+}
+
+export function deactivateCashier(id) {
+  return jsonRequest(`/users/${id}/deactivate`, { method: 'POST' });
 }

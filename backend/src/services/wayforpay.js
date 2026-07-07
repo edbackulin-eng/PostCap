@@ -10,7 +10,7 @@ function sign(fields) {
     .digest('hex');
 }
 
-async function createInvoice({ orderReference, items, currency = 'UAH' }) {
+async function createInvoice({ orderReference, items, currency = 'UAH', serviceUrl }) {
   const merchantAccount = process.env.WAYFORPAY_MERCHANT_ACCOUNT;
   const merchantDomainName = process.env.WAYFORPAY_DOMAIN;
   const orderDate = Math.floor(Date.now() / 1000);
@@ -45,6 +45,7 @@ async function createInvoice({ orderReference, items, currency = 'UAH' }) {
     productName,
     productCount,
     productPrice,
+    ...(serviceUrl && { serviceUrl }),
   };
 
   const response = await fetch(API_URL, {
@@ -61,4 +62,26 @@ async function createInvoice({ orderReference, items, currency = 'UAH' }) {
   return response.json();
 }
 
-module.exports = { createInvoice };
+function verifyCallbackSignature(payload) {
+  const expected = sign([
+    payload.merchantAccount ?? '',
+    payload.orderReference ?? '',
+    payload.amount ?? '',
+    payload.currency ?? '',
+    payload.authCode ?? '',
+    payload.cardPan ?? '',
+    payload.transactionStatus ?? '',
+    payload.reasonCode ?? '',
+  ]);
+
+  return expected === payload.merchantSignature;
+}
+
+function buildAcceptResponse(orderReference) {
+  const time = Math.floor(Date.now() / 1000);
+  const signature = sign([orderReference, 'accept', time]);
+
+  return { orderReference, status: 'accept', time, signature };
+}
+
+module.exports = { createInvoice, verifyCallbackSignature, buildAcceptResponse };

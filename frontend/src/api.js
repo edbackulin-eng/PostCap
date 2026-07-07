@@ -168,3 +168,7 @@ export function createSubscriptionInvoice(ownerId, plan) {
     body: JSON.stringify({ owner_id: ownerId, plan }),
   });
 }
+
+export function getSubscriptionStatus(ownerId) {
+  return jsonRequest(`/subscriptions/status/${ownerId}`);
+}

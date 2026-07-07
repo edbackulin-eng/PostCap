@@ -32,6 +32,17 @@ enum FiscalStatus {
   failed
 }
 
+enum SubscriptionPlan {
+  monthly
+  yearly
+}
+
+enum SubscriptionStatus {
+  pending
+  active
+  expired
+}
+
 model users {
   id         Int      @id @default(autoincrement())
   name       String
@@ -40,8 +51,23 @@ model users {
   is_active  Boolean  @default(true)
   created_at DateTime @default(now())
 
-  shifts shifts[]
-  orders orders[]
+  shifts        shifts[]
+  orders        orders[]
+  subscriptions subscriptions[]
+}
+
+model subscriptions {
+  id              Int                @id @default(autoincrement())
+  owner_id        Int
+  plan            SubscriptionPlan
+  amount          Decimal            @db.Decimal(10, 2)
+  status          SubscriptionStatus @default(pending)
+  order_reference String             @unique
+  started_at      DateTime?
+  expires_at      DateTime?
+  created_at      DateTime           @default(now())
+
+  owner users @relation(fields: [owner_id], references: [id])
 }
 
 model categories {

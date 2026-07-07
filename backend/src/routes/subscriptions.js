@@ -33,6 +33,19 @@ router.post('/create-invoice', async (req, res, next) => {
     const invoice = await wayforpay.createInvoice({
       orderReference,
       items: [{ name: selectedPlan.name, price: selectedPlan.price, quantity: 1 }],
+      serviceUrl: process.env.PUBLIC_BACKEND_URL
+        ? `${process.env.PUBLIC_BACKEND_URL}/subscriptions/webhook`
+        : undefined,
+    });
+
+    await prisma.subscriptions.create({
+      data: {
+        owner_id,
+        plan,
+        amount: selectedPlan.price,
+        status: 'pending',
+        order_reference: orderReference,
+      },
     });
 
     res.status(201).json({
@@ -42,6 +55,58 @@ router.post('/create-invoice', async (req, res, next) => {
       plan,
       amount: selectedPlan.price,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/status/:ownerId', async (req, res, next) => {
+  try {
+    const ownerId = Number(req.params.ownerId);
+
+    const subscription = await prisma.subscriptions.findFirst({
+      where: { owner_id: ownerId },
+      orderBy: { created_at: 'desc' },
+    });
+
+    res.json(subscription);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/webhook', async (req, res, next) => {
+  try {
+    const payload = req.body;
+
+    if (!wayforpay.verifyCallbackSignature(payload)) {
+      return res.status(400).json({ error: 'Invalid signature' });
+    }
+
+    const subscription = await prisma.subscriptions.findUnique({
+      where: { order_reference: payload.orderReference },
+    });
+
+    if (!subscription) {
+      return res.status(404).json({ error: 'Subscription not found for this orderReference' });
+    }
+
+    if (payload.transactionStatus === 'Approved' && subscription.status !== 'active') {
+      const startedAt = new Date();
+      const expiresAt = new Date(startedAt);
+      if (subscription.plan === 'monthly') {
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+      } else {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      }
+
+      await prisma.subscriptions.update({
+        where: { id: subscription.id },
+        data: { status: 'active', started_at: startedAt, expires_at: expiresAt },
+      });
+    }
+
+    res.json(wayforpay.buildAcceptResponse(payload.orderReference));
   } catch (err) {
     next(err);
   }

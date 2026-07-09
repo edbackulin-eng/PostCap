@@ -4,6 +4,7 @@ export const CATEGORY_THEME = {
   Кава: { icon: '☕', gradient: 'linear-gradient(135deg, #6b4226, #e08a3c)' },
   Чай: { icon: '🍵', gradient: 'linear-gradient(135deg, #1f7a5c, #4fd1a5)' },
   Десерти: { icon: '🍰', gradient: 'linear-gradient(135deg, #b8447a, #f2a6c6)' },
+  Коктейлі: { icon: '🍹', gradient: 'linear-gradient(135deg, #d6336c, #ffa94d)' },
   Інше: { icon: '📦', gradient: 'linear-gradient(135deg, #4a5568, #8492a6)' },
 };
 

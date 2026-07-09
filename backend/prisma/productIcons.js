@@ -103,6 +103,34 @@ const PRODUCT_ICONS = {
   'Вода негазована': '💧',
   'Вода газована': '🫧',
   Цукерки: '🍬',
+
+  // Коктейлі — Лимонади
+  Класичний: '🍋',
+  Цитрусовий: '🍊',
+  Полуничний: '🍓',
+  // 'Мохіто' shared between Лимонади and Безалкогольні коктейлі below.
+  Мохіто: '🌿',
+
+  // Коктейлі — Мілкшейки
+  Ванільний: '🍦',
+  Шоколадний: '🍫',
+  Банановий: '🍌',
+
+  // Коктейлі — Смузі
+  // NOTE: 'Зелений' is intentionally NOT added here — it already maps to
+  // '🍵' (green tea) above. The green smoothie's icon override lives in
+  // seed-cocktails-categories.js so this shared map stays untouched.
+
+  // Коктейлі — Безалкогольні коктейлі
+  'Піна Колада': '🥥',
+  'Blue Lagoon': '🌊',
+  'Shirley Temple': '🍒',
+
+  // Коктейлі — Фреші
+  Апельсиновий: '🍊',
+  Яблучний: '🍎',
+  Грейпфрутовий: '🩷',
+  Морквяний: '🥕',
 };
 
 const DEFAULT_PRODUCT_ICON = '🍽️';

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="PostCup">
+  <rect width="40" height="40" rx="9" fill="#fbf3e9" />
+  <text x="20" y="28" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="20">
+    <tspan fill="#1a1a1a">P</tspan><tspan fill="#b8631d">C</tspan>
+  </text>
+</svg>

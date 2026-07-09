@@ -14,6 +14,13 @@
       "runtimeArgs": ["node_modules/vite/bin/vite.js"],
       "cwd": "frontend",
       "port": 5173
+    },
+    {
+      "name": "landing",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "runtimeArgs": ["serve.js"],
+      "cwd": "landing",
+      "port": 4000
     }
   ]
 }

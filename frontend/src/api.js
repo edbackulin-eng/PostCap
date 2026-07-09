@@ -115,6 +115,18 @@ export function getCategories() {
   return jsonRequest('/categories');
 }
 
+export function createCategory(category) {
+  return jsonRequest('/categories', { method: 'POST', body: JSON.stringify(category) });
+}
+
+export function updateCategory(id, category) {
+  return jsonRequest(`/categories/${id}`, { method: 'PUT', body: JSON.stringify(category) });
+}
+
+export function deleteCategory(id) {
+  return jsonRequest(`/categories/${id}`, { method: 'DELETE' });
+}
+
 export function getIngredients() {
   return jsonRequest('/ingredients');
 }

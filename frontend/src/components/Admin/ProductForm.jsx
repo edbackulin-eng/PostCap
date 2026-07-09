@@ -17,10 +17,10 @@ function buildInitialRecipeRows(product) {
   }));
 }
 
-function ProductForm({ mode, product, categoryOptions, ingredients, onSaved, onCancel }) {
+function ProductForm({ mode, product, categoryOptions, ingredients, defaultCategoryId, onSaved, onCancel }) {
   const [name, setName] = useState(product?.name ?? '');
   const [categoryId, setCategoryId] = useState(
-    product ? String(product.category_id) : String(categoryOptions[0]?.id ?? '')
+    product ? String(product.category_id) : String(defaultCategoryId ?? categoryOptions[0]?.id ?? '')
   );
   const [price, setPrice] = useState(product ? String(product.price) : '');
   const [icon, setIcon] = useState(product?.icon ?? DEFAULT_ICON);

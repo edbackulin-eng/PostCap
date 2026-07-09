@@ -1,31 +1,19 @@
 import { useEffect, useState } from 'react';
 import { getProducts, getCategories, openShift, createOrder } from '../api';
+import { resolveTopCategoryDisplay, resolveSubcategoryDisplay } from '../utils/categoryDisplay';
 import CategoryTiles from './CategoryTiles';
 import ProductGrid from './ProductGrid';
 import Cart from './Cart';
 import OrderConfirmation from './OrderConfirmation';
 import './Pos.css';
 
-const CATEGORY_THEME = {
-  Кава: { icon: '☕', gradient: 'linear-gradient(135deg, #6b4226, #e08a3c)' },
-  Чай: { icon: '🍵', gradient: 'linear-gradient(135deg, #1f7a5c, #4fd1a5)' },
-  Десерти: { icon: '🍰', gradient: 'linear-gradient(135deg, #b8447a, #f2a6c6)' },
-  Інше: { icon: '📦', gradient: 'linear-gradient(135deg, #4a5568, #8492a6)' },
-};
-const DEFAULT_THEME = { icon: '🍽️', gradient: 'linear-gradient(135deg, #4f6f8c, #6fa8ff)' };
-
-function splitLeadingEmoji(name) {
-  const match = name.match(/^(\p{Emoji}️?)\s*(.*)$/u);
-  return match ? { icon: match[1], label: match[2] } : { icon: '•', label: name };
-}
-
 function buildTopTile(category) {
-  const theme = CATEGORY_THEME[category.name] || DEFAULT_THEME;
-  return { ...category, displayIcon: theme.icon, displayLabel: category.name, gradient: theme.gradient };
+  const { icon, label, gradient } = resolveTopCategoryDisplay(category.name);
+  return { ...category, displayIcon: icon, displayLabel: label, gradient };
 }
 
 function buildSubTile(subcategory, gradient) {
-  const { icon, label } = splitLeadingEmoji(subcategory.name);
+  const { icon, label } = resolveSubcategoryDisplay(subcategory.name);
   return { ...subcategory, displayIcon: icon, displayLabel: label, gradient };
 }
 
@@ -155,7 +143,7 @@ function Pos({ user }) {
   const topTiles = categories.map(buildTopTile);
   const subTiles = activeCategory
     ? (activeCategory.subcategories || []).map((s) =>
-        buildSubTile(s, (CATEGORY_THEME[activeCategory.name] || DEFAULT_THEME).gradient)
+        buildSubTile(s, resolveTopCategoryDisplay(activeCategory.name).gradient)
       )
     : [];
 
@@ -174,7 +162,7 @@ function Pos({ user }) {
   if (view === 'subcategories') {
     navTitle = activeCategory.name;
   } else if (view === 'products') {
-    navTitle = activeSubcategory ? splitLeadingEmoji(activeSubcategory.name).label : activeCategory.name;
+    navTitle = activeSubcategory ? resolveSubcategoryDisplay(activeSubcategory.name).label : activeCategory.name;
   }
 
   return (

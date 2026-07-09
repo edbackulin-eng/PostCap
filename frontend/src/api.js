@@ -131,6 +131,10 @@ export function getIngredients() {
   return jsonRequest('/ingredients');
 }
 
+export function createIngredient(ingredient) {
+  return jsonRequest('/ingredients', { method: 'POST', body: JSON.stringify(ingredient) });
+}
+
 export function createProduct(product) {
   return jsonRequest('/products', { method: 'POST', body: JSON.stringify(product) });
 }

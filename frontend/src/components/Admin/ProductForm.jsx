@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createProduct, updateProduct } from '../../api';
+import { createProduct, updateProduct, createIngredient } from '../../api';
 
 const DEFAULT_ICON = '🍽️';
 const ICON_SUGGESTIONS = [
@@ -9,10 +9,10 @@ const ICON_SUGGESTIONS = [
 
 function buildInitialRecipeRows(product) {
   if (!product || !product.recipe || product.recipe.length === 0) {
-    return [{ ingredientId: '', quantity: '' }];
+    return [{ ingredientName: '', quantity: '' }];
   }
   return product.recipe.map((r) => ({
-    ingredientId: String(r.ingredient_id),
+    ingredientName: r.ingredient?.name ?? '',
     quantity: String(r.quantity_per_unit),
   }));
 }
@@ -36,11 +36,24 @@ function ProductForm({ mode, product, categoryOptions, ingredients, defaultCateg
   }
 
   function addRow() {
-    setRecipeRows((rows) => [...rows, { ingredientId: '', quantity: '' }]);
+    setRecipeRows((rows) => [...rows, { ingredientName: '', quantity: '' }]);
   }
 
   function removeRow(index) {
     setRecipeRows((rows) => rows.filter((_, i) => i !== index));
+  }
+
+  // Resolves a typed ingredient name to an id, reusing an already-loaded
+  // ingredient by name (case-insensitive) or creating a new one. The
+  // backend also de-duplicates by name, so this stays safe even if the
+  // same new name appears in two rows within one submit.
+  async function resolveIngredientId(rawName) {
+    const trimmed = rawName.trim();
+    const existing = ingredients.find((i) => i.name.trim().toLowerCase() === trimmed.toLowerCase());
+    if (existing) return existing.id;
+
+    const created = await createIngredient({ name: trimmed });
+    return created.id;
   }
 
   async function handleSubmit(e) {
@@ -60,24 +73,25 @@ function ProductForm({ mode, product, categoryOptions, ingredients, defaultCateg
       return;
     }
 
-    const recipe = recipeRows
-      .filter((row) => row.ingredientId && row.quantity)
-      .map((row) => ({
-        ingredient_id: Number(row.ingredientId),
-        quantity_per_unit: Number(row.quantity),
-      }));
-
-    const payload = {
-      name: name.trim(),
-      category_id: Number(categoryId),
-      price: Number(price),
-      icon: icon.trim() || DEFAULT_ICON,
-      is_active: isActive,
-      recipe,
-    };
+    const filledRows = recipeRows.filter((row) => row.ingredientName.trim() && row.quantity);
 
     setIsSaving(true);
     try {
+      const recipe = [];
+      for (const row of filledRows) {
+        const ingredientId = await resolveIngredientId(row.ingredientName);
+        recipe.push({ ingredient_id: ingredientId, quantity_per_unit: Number(row.quantity) });
+      }
+
+      const payload = {
+        name: name.trim(),
+        category_id: Number(categoryId),
+        price: Number(price),
+        icon: icon.trim() || DEFAULT_ICON,
+        is_active: isActive,
+        recipe,
+      };
+
       if (mode === 'create') {
         await createProduct(payload);
       } else {
@@ -161,19 +175,20 @@ function ProductForm({ mode, product, categoryOptions, ingredients, defaultCateg
 
         <div className="recipe-builder">
           <span className="form-field-label">Рецептура</span>
+          <datalist id="ingredient-suggestions">
+            {ingredients.map((ingredient) => (
+              <option key={ingredient.id} value={ingredient.name} />
+            ))}
+          </datalist>
           {recipeRows.map((row, index) => (
             <div key={index} className="recipe-row">
-              <select
-                value={row.ingredientId}
-                onChange={(e) => updateRow(index, 'ingredientId', e.target.value)}
-              >
-                <option value="">— інгредієнт —</option>
-                {ingredients.map((ingredient) => (
-                  <option key={ingredient.id} value={ingredient.id}>
-                    {ingredient.name} ({ingredient.unit})
-                  </option>
-                ))}
-              </select>
+              <input
+                type="text"
+                list="ingredient-suggestions"
+                placeholder="Назва інгредієнта (можна нового)"
+                value={row.ingredientName}
+                onChange={(e) => updateRow(index, 'ingredientName', e.target.value)}
+              />
               <input
                 type="number"
                 step="0.01"

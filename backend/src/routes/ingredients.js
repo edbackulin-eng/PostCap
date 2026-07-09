@@ -12,6 +12,32 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+router.post('/', async (req, res, next) => {
+  try {
+    const { name, unit } = req.body;
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ error: 'name is required' });
+    }
+    const trimmedName = name.trim();
+
+    const existing = await prisma.ingredients.findFirst({
+      where: { name: { equals: trimmedName, mode: 'insensitive' } },
+    });
+    if (existing) {
+      return res.status(200).json(existing);
+    }
+
+    const ingredient = await prisma.ingredients.create({
+      data: { name: trimmedName, unit: unit || 'г', current_stock: 0 },
+    });
+
+    res.status(201).json(ingredient);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/:id/restock', async (req, res, next) => {
   try {
     const ingredientId = Number(req.params.id);

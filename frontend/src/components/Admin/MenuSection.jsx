@@ -15,7 +15,29 @@ function flattenCategories(categories) {
   return options;
 }
 
-function ProductTable({ products, onEdit, onDelete }) {
+function buildBreadcrumbMap(categories) {
+  const map = {};
+  for (const top of categories) {
+    const topLabel = resolveTopCategoryDisplay(top.name).label;
+    map[top.id] = topLabel;
+    for (const sub of top.subcategories || []) {
+      map[sub.id] = `${topLabel} > ${resolveSubcategoryDisplay(sub.name).label}`;
+    }
+  }
+  return map;
+}
+
+function toggleSetItem(set, id) {
+  const next = new Set(set);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  return next;
+}
+
+function ProductTable({ products, categoryLabelFor, onEdit, onDelete }) {
   if (products.length === 0) {
     return <div className="menu-empty">Товарів ще немає</div>;
   }
@@ -26,6 +48,7 @@ function ProductTable({ products, onEdit, onDelete }) {
         <tr>
           <th></th>
           <th>Назва</th>
+          {categoryLabelFor && <th>Категорія</th>}
           <th>Ціна</th>
           <th>Статус</th>
           <th></th>
@@ -36,6 +59,7 @@ function ProductTable({ products, onEdit, onDelete }) {
           <tr key={product.id}>
             <td className="menu-table-icon">{product.icon}</td>
             <td>{product.name}</td>
+            {categoryLabelFor && <td>{categoryLabelFor(product)}</td>}
             <td>{Number(product.price).toFixed(2)} ₴</td>
             <td>
               <span
@@ -65,41 +89,6 @@ function ProductTable({ products, onEdit, onDelete }) {
   );
 }
 
-function CategoryList({ items, resolveDisplay, countLabel, onOpen, onEdit, onDelete }) {
-  if (items.length === 0) {
-    return <div className="menu-empty">Ще немає жодної категорії</div>;
-  }
-
-  return (
-    <div className="category-manage-list">
-      {items.map((item) => {
-        const { icon, label } = resolveDisplay(item.name);
-        return (
-          <div key={item.id} className="category-manage-row">
-            <span className="category-manage-icon">{icon}</span>
-            <button type="button" className="category-manage-label" onClick={() => onOpen(item)}>
-              {label}
-            </button>
-            <span className="category-manage-meta">{countLabel(item)}</span>
-            <div className="category-manage-actions">
-              <button type="button" className="admin-btn admin-btn--small" onClick={() => onEdit(item)}>
-                Редагувати
-              </button>
-              <button
-                type="button"
-                className="admin-btn admin-btn--small admin-btn--danger"
-                onClick={() => onDelete(item)}
-              >
-                Видалити
-              </button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 function MenuSection() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -108,8 +97,9 @@ function MenuSection() {
   const [actionError, setActionError] = useState(null);
   const [productFormState, setProductFormState] = useState(null);
   const [categoryFormState, setCategoryFormState] = useState(null);
-  const [activeCategoryId, setActiveCategoryId] = useState(null);
-  const [activeSubcategoryId, setActiveSubcategoryId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState(new Set());
+  const [expandedSubcategoryIds, setExpandedSubcategoryIds] = useState(new Set());
 
   function loadAll() {
     Promise.all([getProducts(), getCategories(), getIngredients()])
@@ -124,28 +114,17 @@ function MenuSection() {
 
   useEffect(loadAll, []);
 
-  const activeCategory = categories.find((c) => c.id === activeCategoryId) || null;
-  const activeSubcategory = activeCategory?.subcategories?.find((s) => s.id === activeSubcategoryId) || null;
   const categoryOptions = flattenCategories(categories);
+  const breadcrumbMap = buildBreadcrumbMap(categories);
 
-  function openCategory(category) {
+  function toggleCategory(id) {
     setActionError(null);
-    setActiveCategoryId(category.id);
-    setActiveSubcategoryId(null);
+    setExpandedCategoryIds((prev) => toggleSetItem(prev, id));
   }
 
-  function openSubcategory(subcategory) {
+  function toggleSubcategory(id) {
     setActionError(null);
-    setActiveSubcategoryId(subcategory.id);
-  }
-
-  function goBack() {
-    setActionError(null);
-    if (activeSubcategoryId) {
-      setActiveSubcategoryId(null);
-    } else {
-      setActiveCategoryId(null);
-    }
+    setExpandedSubcategoryIds((prev) => toggleSetItem(prev, id));
   }
 
   async function handleDeleteProduct(product) {
@@ -179,56 +158,36 @@ function MenuSection() {
     loadAll();
   }
 
-  const directProducts = activeCategory ? products.filter((p) => p.category_id === activeCategory.id) : [];
-  const subcategoryProducts = activeSubcategory
-    ? products.filter((p) => p.category_id === activeSubcategory.id)
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const isSearching = trimmedQuery.length > 0;
+  const searchResults = isSearching
+    ? products.filter((p) => p.name.toLowerCase().includes(trimmedQuery))
     : [];
 
   return (
     <div className="menu-section">
       <div className="menu-section-header">
-        <div className="menu-section-heading">
-          {(activeCategoryId || activeSubcategoryId) && (
-            <button type="button" className="admin-btn admin-btn--small" onClick={goBack}>
-              ← Назад
-            </button>
-          )}
-          <h1>
-            {activeSubcategory
-              ? `${activeCategory.name} > ${resolveSubcategoryDisplay(activeSubcategory.name).label}`
-              : activeCategory
-                ? resolveTopCategoryDisplay(activeCategory.name).label
-                : 'Меню'}
-          </h1>
-        </div>
+        <h1>Меню</h1>
+        <button
+          type="button"
+          className="admin-btn admin-btn--primary"
+          onClick={() => setCategoryFormState({ mode: 'create', parentCategoryId: null })}
+        >
+          + Додати категорію
+        </button>
+      </div>
 
-        {!activeCategoryId && (
-          <button
-            type="button"
-            className="admin-btn admin-btn--primary"
-            onClick={() => setCategoryFormState({ mode: 'create', parentCategoryId: null })}
-          >
-            + Додати категорію
-          </button>
-        )}
-        {activeCategoryId && !activeSubcategoryId && (
-          <button
-            type="button"
-            className="admin-btn admin-btn--primary"
-            onClick={() => setCategoryFormState({ mode: 'create', parentCategoryId: activeCategory.id })}
-          >
-            + Додати підкатегорію
-          </button>
-        )}
-        {activeSubcategoryId && (
-          <button
-            type="button"
-            className="admin-btn admin-btn--primary"
-            onClick={() =>
-              setProductFormState({ mode: 'create', defaultCategoryId: activeSubcategory.id })
-            }
-          >
-            + Додати товар
+      <div className="menu-search">
+        <input
+          type="text"
+          className="menu-search-input"
+          placeholder="🔍 Пошук товару за назвою..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {isSearching && (
+          <button type="button" className="menu-search-clear" onClick={() => setSearchQuery('')}>
+            ✕
           </button>
         )}
       </div>
@@ -236,58 +195,156 @@ function MenuSection() {
       {loadError && <div className="admin-error">{loadError}</div>}
       {actionError && <div className="admin-error">{actionError}</div>}
 
-      {!activeCategoryId && (
-        <CategoryList
-          items={categories}
-          resolveDisplay={resolveTopCategoryDisplay}
-          countLabel={(c) =>
-            (c.subcategories?.length || 0) > 0
-              ? `Підкатегорій: ${c.subcategories.length}`
-              : `Товарів: ${products.filter((p) => p.category_id === c.id).length}`
-          }
-          onOpen={openCategory}
-          onEdit={(category) => setCategoryFormState({ mode: 'edit', category })}
-          onDelete={(category) => handleDeleteCategory(category, resolveTopCategoryDisplay)}
-        />
-      )}
-
-      {activeCategoryId && !activeSubcategoryId && (
+      {isSearching ? (
         <>
-          <CategoryList
-            items={activeCategory.subcategories || []}
-            resolveDisplay={resolveSubcategoryDisplay}
-            countLabel={(s) => `Товарів: ${products.filter((p) => p.category_id === s.id).length}`}
-            onOpen={openSubcategory}
-            onEdit={(subcategory) => setCategoryFormState({ mode: 'edit', category: subcategory })}
-            onDelete={(subcategory) => handleDeleteCategory(subcategory, resolveSubcategoryDisplay)}
-          />
-
-          <div className="menu-section-subheader">
-            <h2>Товари напряму в категорії «{resolveTopCategoryDisplay(activeCategory.name).label}»</h2>
-            <button
-              type="button"
-              className="admin-btn admin-btn--small"
-              onClick={() =>
-                setProductFormState({ mode: 'create', defaultCategoryId: activeCategory.id })
-              }
-            >
-              + Додати товар
-            </button>
-          </div>
+          <h2 className="menu-section-subheader-title">Результати пошуку: «{searchQuery.trim()}»</h2>
           <ProductTable
-            products={directProducts}
+            products={searchResults}
+            categoryLabelFor={(product) => breadcrumbMap[product.category_id] ?? '—'}
             onEdit={(product) => setProductFormState({ mode: 'edit', product })}
             onDelete={handleDeleteProduct}
           />
         </>
-      )}
+      ) : (
+        <div className="category-accordion">
+          {categories.map((category) => {
+            const { icon, label } = resolveTopCategoryDisplay(category.name);
+            const isOpen = expandedCategoryIds.has(category.id);
+            const directProducts = products.filter((p) => p.category_id === category.id);
+            const meta =
+              (category.subcategories?.length || 0) > 0
+                ? `Підкатегорій: ${category.subcategories.length}`
+                : `Товарів: ${directProducts.length}`;
 
-      {activeSubcategoryId && (
-        <ProductTable
-          products={subcategoryProducts}
-          onEdit={(product) => setProductFormState({ mode: 'edit', product })}
-          onDelete={handleDeleteProduct}
-        />
+            return (
+              <div key={category.id} className="category-accordion-item">
+                <div className="category-accordion-header" onClick={() => toggleCategory(category.id)}>
+                  <span className={`category-accordion-chevron ${isOpen ? 'category-accordion-chevron--open' : ''}`}>
+                    ▶
+                  </span>
+                  <span className="category-accordion-icon">{icon}</span>
+                  <span className="category-accordion-label">{label}</span>
+                  <span className="category-accordion-meta">{meta}</span>
+                  <div className="category-accordion-actions" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--small"
+                      onClick={() => setCategoryFormState({ mode: 'edit', category })}
+                    >
+                      Редагувати
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--small admin-btn--danger"
+                      onClick={() => handleDeleteCategory(category, resolveTopCategoryDisplay)}
+                    >
+                      Видалити
+                    </button>
+                  </div>
+                </div>
+
+                {isOpen && (
+                  <div className="category-accordion-body">
+                    <div className="menu-section-subheader">
+                      <h2>Товари напряму в категорії «{label}»</h2>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--small"
+                        onClick={() => setProductFormState({ mode: 'create', defaultCategoryId: category.id })}
+                      >
+                        + Додати товар
+                      </button>
+                    </div>
+                    <ProductTable
+                      products={directProducts}
+                      onEdit={(product) => setProductFormState({ mode: 'edit', product })}
+                      onDelete={handleDeleteProduct}
+                    />
+
+                    <div className="menu-section-subheader">
+                      <h2>Підкатегорії</h2>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--small"
+                        onClick={() => setCategoryFormState({ mode: 'create', parentCategoryId: category.id })}
+                      >
+                        + Додати підкатегорію
+                      </button>
+                    </div>
+
+                    {(category.subcategories || []).length === 0 && (
+                      <div className="menu-empty">Ще немає жодної підкатегорії</div>
+                    )}
+
+                    {(category.subcategories || []).map((subcategory) => {
+                      const subDisplay = resolveSubcategoryDisplay(subcategory.name);
+                      const subOpen = expandedSubcategoryIds.has(subcategory.id);
+                      const subProducts = products.filter((p) => p.category_id === subcategory.id);
+
+                      return (
+                        <div key={subcategory.id} className="subcategory-accordion-item">
+                          <div
+                            className="subcategory-accordion-header"
+                            onClick={() => toggleSubcategory(subcategory.id)}
+                          >
+                            <span
+                              className={`category-accordion-chevron ${subOpen ? 'category-accordion-chevron--open' : ''}`}
+                            >
+                              ▶
+                            </span>
+                            <span className="category-accordion-icon">{subDisplay.icon}</span>
+                            <span className="category-accordion-label">{subDisplay.label}</span>
+                            <span className="category-accordion-meta">Товарів: {subProducts.length}</span>
+                            <div className="category-accordion-actions" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                className="admin-btn admin-btn--small"
+                                onClick={() => setCategoryFormState({ mode: 'edit', category: subcategory })}
+                              >
+                                Редагувати
+                              </button>
+                              <button
+                                type="button"
+                                className="admin-btn admin-btn--small admin-btn--danger"
+                                onClick={() => handleDeleteCategory(subcategory, resolveSubcategoryDisplay)}
+                              >
+                                Видалити
+                              </button>
+                            </div>
+                          </div>
+
+                          {subOpen && (
+                            <div className="subcategory-accordion-body">
+                              <div className="menu-section-subheader">
+                                <h2>Товари</h2>
+                                <button
+                                  type="button"
+                                  className="admin-btn admin-btn--small"
+                                  onClick={() =>
+                                    setProductFormState({ mode: 'create', defaultCategoryId: subcategory.id })
+                                  }
+                                >
+                                  + Додати товар
+                                </button>
+                              </div>
+                              <ProductTable
+                                products={subProducts}
+                                onEdit={(product) => setProductFormState({ mode: 'edit', product })}
+                                onDelete={handleDeleteProduct}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {categories.length === 0 && !loadError && <div className="menu-empty">Ще немає жодної категорії</div>}
+        </div>
       )}
 
       {productFormState && (

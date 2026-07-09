@@ -70,6 +70,7 @@ function MenuSection() {
       <table className="menu-table">
         <thead>
           <tr>
+            <th></th>
             <th>Назва</th>
             <th>Категорія</th>
             <th>Ціна</th>
@@ -80,6 +81,7 @@ function MenuSection() {
         <tbody>
           {products.map((product) => (
             <tr key={product.id}>
+              <td className="menu-table-icon">{product.icon}</td>
               <td>{product.name}</td>
               <td>{product.category?.name}</td>
               <td>{Number(product.price).toFixed(2)} ₴</td>

@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const { getProductIcon } = require('./productIcons');
 
 const prisma = new PrismaClient();
 
@@ -129,6 +130,7 @@ async function main() {
           name: productSpec.name,
           category_id: subcategory.id,
           price: 0,
+          icon: getProductIcon(productSpec.name),
           is_active: true,
           recipe: {
             create: [
@@ -155,7 +157,7 @@ async function main() {
       continue;
     }
     const product = await prisma.products.create({
-      data: { name, category_id: other.id, price: 0, is_active: true },
+      data: { name, category_id: other.id, price: 0, icon: getProductIcon(name), is_active: true },
     });
     otherProducts.push({ name, status: 'created', id: product.id });
   }

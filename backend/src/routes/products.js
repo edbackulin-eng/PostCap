@@ -34,7 +34,7 @@ router.get('/', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const { name, category_id, price, is_active, recipe } = req.body;
+    const { name, category_id, price, icon, is_active, recipe } = req.body;
 
     if (!name || typeof name !== 'string') {
       return res.status(400).json({ error: 'name is required' });
@@ -62,6 +62,7 @@ router.post('/', async (req, res, next) => {
         name,
         category_id,
         price,
+        ...(icon !== undefined && { icon }),
         is_active: is_active ?? true,
         recipe: {
           create: recipeItems.map((item) => ({
@@ -82,7 +83,7 @@ router.post('/', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     const productId = Number(req.params.id);
-    const { name, category_id, price, is_active, recipe } = req.body;
+    const { name, category_id, price, icon, is_active, recipe } = req.body;
 
     const existing = await prisma.products.findUnique({ where: { id: productId } });
     if (!existing) {
@@ -115,6 +116,7 @@ router.put('/:id', async (req, res, next) => {
           ...(name !== undefined && { name }),
           ...(category_id !== undefined && { category_id }),
           ...(price !== undefined && { price }),
+          ...(icon !== undefined && { icon }),
           ...(is_active !== undefined && { is_active }),
           ...(recipeItems && {
             recipe: {

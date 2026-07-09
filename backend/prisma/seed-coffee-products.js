@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const { getProductIcon } = require('./productIcons');
 
 const prisma = new PrismaClient();
 
@@ -75,7 +76,10 @@ async function main() {
       continue;
     }
 
-    await prisma.products.update({ where: { id: product.id }, data: { category_id: categoryId } });
+    await prisma.products.update({
+      where: { id: product.id },
+      data: { category_id: categoryId, icon: getProductIcon(productName) },
+    });
     reassigned.push({ name: productName, status: 'reassigned', category_id: categoryId });
   }
 
@@ -96,6 +100,7 @@ async function main() {
         name: spec.name,
         category_id: categoryId,
         price: 0,
+        icon: getProductIcon(spec.name),
         is_active: true,
         recipe: hasRecipe
           ? {

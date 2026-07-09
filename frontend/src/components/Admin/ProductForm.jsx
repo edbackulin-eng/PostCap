@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { createProduct, updateProduct } from '../../api';
 
+const DEFAULT_ICON = '🍽️';
+const ICON_SUGGESTIONS = [
+  '☕', '🥛', '🍵', '🧊', '🥤', '🍰', '🥐', '🧁', '🍪', '🍫',
+  '🍬', '🍯', '🍮', '🌸', '🍓', '🍋', '🥭', '🍎', '🌿', '💧',
+];
+
 function buildInitialRecipeRows(product) {
   if (!product || !product.recipe || product.recipe.length === 0) {
     return [{ ingredientId: '', quantity: '' }];
@@ -17,6 +23,7 @@ function ProductForm({ mode, product, categoryOptions, ingredients, onSaved, onC
     product ? String(product.category_id) : String(categoryOptions[0]?.id ?? '')
   );
   const [price, setPrice] = useState(product ? String(product.price) : '');
+  const [icon, setIcon] = useState(product?.icon ?? DEFAULT_ICON);
   const [isActive, setIsActive] = useState(product ? product.is_active : true);
   const [recipeRows, setRecipeRows] = useState(buildInitialRecipeRows(product));
   const [isSaving, setIsSaving] = useState(false);
@@ -64,6 +71,7 @@ function ProductForm({ mode, product, categoryOptions, ingredients, onSaved, onC
       name: name.trim(),
       category_id: Number(categoryId),
       price: Number(price),
+      icon: icon.trim() || DEFAULT_ICON,
       is_active: isActive,
       recipe,
     };
@@ -116,6 +124,31 @@ function ProductForm({ mode, product, categoryOptions, ingredients, onSaved, onC
             onChange={(e) => setPrice(e.target.value)}
           />
         </label>
+
+        <div className="form-field">
+          <span>Іконка</span>
+          <div className="icon-picker">
+            <input
+              type="text"
+              className="icon-picker-input"
+              value={icon}
+              maxLength={4}
+              onChange={(e) => setIcon(e.target.value)}
+            />
+            <div className="icon-picker-suggestions">
+              {ICON_SUGGESTIONS.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  className={`icon-picker-option ${icon === suggestion ? 'icon-picker-option--active' : ''}`}
+                  onClick={() => setIcon(suggestion)}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
         <label className="form-field form-field--checkbox">
           <input

@@ -15,7 +15,7 @@ function ProductGrid({ products, onProductClick, loadError, flashingId }) {
             className={`product-card ${flashingId === product.id ? 'product-card--flash' : ''}`}
             onClick={() => onProductClick(product)}
           >
-            <span className="product-card-icon">{product.name.trim().charAt(0).toUpperCase()}</span>
+            <span className="product-card-icon">{product.icon || product.name.trim().charAt(0).toUpperCase()}</span>
             <span className="product-card-name">{product.name}</span>
             <span className="product-card-price">{Number(product.price).toFixed(2)} ₴</span>
           </button>

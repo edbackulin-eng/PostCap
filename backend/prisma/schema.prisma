@@ -85,6 +85,7 @@ model products {
   name        String
   category_id Int
   price       Decimal @db.Decimal(10, 2)
+  icon        String  @default("🍽️")
   is_active   Boolean @default(true)
 
   category    categories          @relation(fields: [category_id], references: [id])

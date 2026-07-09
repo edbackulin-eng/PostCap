@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const { getProductIcon } = require('./productIcons');
 
 const prisma = new PrismaClient();
 
@@ -24,6 +25,7 @@ async function main() {
       name: 'Капучино',
       category_id: coffee.id,
       price: 65.0,
+      icon: getProductIcon('Капучино'),
       is_active: true,
       recipe: {
         create: [

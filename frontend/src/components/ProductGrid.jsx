@@ -1,19 +1,6 @@
-function ProductGrid({ tabs, activeTab, onTabChange, products, onProductClick, loadError }) {
+function ProductGrid({ products, onProductClick, loadError, flashingId }) {
   return (
     <div className="product-grid-wrapper">
-      <div className="tabs">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            className={`tab ${tab === activeTab ? 'tab--active' : ''}`}
-            onClick={() => onTabChange(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
       {loadError && <div className="grid-error">{loadError}</div>}
 
       {!loadError && products.length === 0 && (
@@ -25,9 +12,10 @@ function ProductGrid({ tabs, activeTab, onTabChange, products, onProductClick, l
           <button
             key={product.id}
             type="button"
-            className="product-card"
+            className={`product-card ${flashingId === product.id ? 'product-card--flash' : ''}`}
             onClick={() => onProductClick(product)}
           >
+            <span className="product-card-icon">{product.name.trim().charAt(0).toUpperCase()}</span>
             <span className="product-card-name">{product.name}</span>
             <span className="product-card-price">{Number(product.price).toFixed(2)} ₴</span>
           </button>

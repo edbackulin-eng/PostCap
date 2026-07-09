@@ -1,3 +1,9 @@
+// Address of the PostCup app (POS + admin panel). Update this one line when
+// the frontend moves from localhost to its real hosting address.
+const APP_URL = 'http://localhost:5173';
+
+document.getElementById('appLink').href = APP_URL;
+
 document.getElementById('year').textContent = new Date().getFullYear();
 
 const leadForm = document.getElementById('leadForm');

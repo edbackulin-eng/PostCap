@@ -127,6 +127,12 @@ ul {
   padding-bottom: 14px;
 }
 
+.header__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -500,6 +506,11 @@ ul {
 
 
 .footer__contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   color: var(--coffee-300);
   font-size: 14px;
 }
@@ -507,6 +518,10 @@ ul {
 .footer__contact a {
   color: var(--white);
   font-weight: 600;
+}
+
+.footer__contact-divider {
+  color: var(--coffee-500);
 }
 
 .footer__copy {
